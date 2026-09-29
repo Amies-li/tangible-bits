@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tangible Bits｜打破螢幕與實體世界的介面革命</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ember:#E8731A; --amber:#F7A948; --glow:#FFD39A;
+  --espresso:#1E1009; --walnut:#5A3419;
+  --paper:#FFFCF8; --ink:#241810; --muted:#6E5A4C; --line:#EADFD3; --panel:#FFFFFF;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--paper:#1B120C;--ink:#F6EDE4;--muted:#BFA999;--line:#3A2A1F;--panel:#261A12}
+}
+:root[data-theme="dark"]{--paper:#1B120C;--ink:#F6EDE4;--muted:#BFA999;--line:#3A2A1F;--panel:#261A12}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.7;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+
+.deck{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+.slide{min-height:100%;scroll-snap-align:start;position:relative;display:flex;align-items:center;padding:clamp(24px,5vw,72px) clamp(20px,6vw,96px);overflow:hidden}
+.slide > .inner{width:100%;max-width:1240px;margin:0 auto}
+.tag{font-size:13px;letter-spacing:.04em;color:var(--muted);margin:0 0 14px}
+.dark .tag,.orange .tag{color:rgba(255,255,255,.7)}
+h1,h2,h3{margin:0;line-height:1.25}
+h2{font-size:clamp(28px,4vw,52px);font-weight:900;letter-spacing:.01em}
+h2 .en{font-weight:700;color:var(--ember)}
+.lede{font-size:clamp(17px,1.7vw,21px);color:var(--muted);max-width:36em;margin:16px 0 0}
+.pts{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:18px;max-width:34em}
+.pts li{padding-left:18px;border-left:3px solid var(--amber);font-size:clamp(15px,1.4vw,18px)}
+.pts b{display:block;font-size:1.08em}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:center}
+.hint{font-size:14px;color:var(--muted);margin-top:14px}
+.dark .hint,.orange .hint{color:rgba(255,255,255,.72)}
+.dark{background:#140B06;color:#F8EEE5}
+.orange{background:linear-gradient(135deg,#F08A2A,#C9500F);color:#fff}
+.photo{border-radius:6px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(40,15,0,.55)}
+.photo img{width:100%;height:100%;object-fit:cover}
+.btn{border:1.5px solid currentColor;background:transparent;border-radius:999px;padding:8px 18px;cursor:pointer;font-size:15px}
+.btn[aria-pressed="true"],.btn.on{background:var(--ember);border-color:var(--ember);color:#fff}
+
+/* nav */
+.nav{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:20}
+.nav a{width:10px;height:10px;border-radius:50%;background:rgba(150,110,80,.45);display:block;position:relative;transition:transform .2s,background .2s}
+.nav a.cur{background:var(--ember);transform:scale(1.5)}
+.nav a span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--espresso);color:#fff;font-size:12px;padding:3px 9px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .15s}
+.nav a:hover span,.nav a:focus-visible span{opacity:1}
+.count{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--muted);z-index:20;background:color-mix(in srgb,var(--paper) 80%,transparent);padding:2px 10px;border-radius:99px}
+
+/* 1 hero */
+#s1{background:radial-gradient(120% 90% at 70% 40%,#F7A948 0%,#D9661A 55%,#8C3A0B 100%);color:#fff}
+.field{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cols),1fr);align-content:center;gap:1.1vw;padding:0 3vw;opacity:.9}
+.field i{aspect-ratio:1;display:block;transition:transform .35s ease}
+.hero-copy{position:relative;text-align:center;max-width:980px;margin:0 auto}
+.hero-copy h1{font-family:var(--sans);font-weight:900;font-size:clamp(56px,11vw,150px);letter-spacing:-.02em;line-height:1;text-shadow:0 6px 30px rgba(90,30,0,.45)}
+.hero-copy .sub{font-family:var(--serif);font-size:clamp(20px,2.8vw,36px);margin:22px 0 0;text-shadow:0 2px 14px rgba(90,30,0,.5)}
+.hero-copy .by{font-size:clamp(14px,1.3vw,17px);max-width:46em;margin:28px auto 0;background:rgba(60,20,0,.35);padding:14px 20px;border-radius:6px;backdrop-filter:blur(4px)}
+.hero-copy .go{margin-top:26px;font-size:14px;opacity:.85}
+
+/* 3 abacus */
+.abacus{display:inline-flex;flex-direction:column;background:linear-gradient(#6B3F1E,#4A2A12);padding:12px 16px;border-radius:8px;margin-top:22px;box-shadow:inset 0 0 0 3px #3A200C,0 14px 30px -14px rgba(0,0,0,.6)}
+.rods{display:flex;gap:6px}
+.rod{width:46px;display:flex;flex-direction:column;position:relative}
+.rod::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:#C9A77B}
+.up,.low{display:flex;flex-direction:column;position:relative}
+.up{height:58px}
+.low{height:132px}
+.bar{height:8px;background:#2C170A;margin:0 -8px;position:relative;z-index:1}
+.bead{width:46px;height:24px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;z-index:1;background:radial-gradient(ellipse at 40% 30%,#B57B4A,#6A3B18 70%);box-shadow:inset 0 -3px 4px rgba(0,0,0,.35);flex:none}
+.bead.on{background:radial-gradient(ellipse at 40% 30%,#FFD39A,#E8731A 70%)}
+.spacer{flex:1}
+.abacus-read{color:#FFE7C7;font-size:14px;margin-top:10px;display:flex;justify-content:space-between;gap:20px}
+.abacus-read strong{font-size:22px;font-variant-numeric:tabular-nums}
+
+.ab-col .abacus{position:relative;margin:-70px 0 0 24px}
+.ab-col .up{height:50px}.ab-col .low{height:112px}.ab-col .bead{height:21px}
+/* 4 vision */
+#s4 .split{grid-template-columns:1.1fr .9fr}
+#s4 h2{font-size:clamp(34px,5vw,64px)}
+#s4 .lede{color:rgba(255,255,255,.88)}
+
+/* 5 matrix */
+.mode{display:flex;gap:8px;margin:22px 0 8px}
+.matrix{width:100%;border-collapse:separate;border-spacing:0;font-size:clamp(15px,1.6vw,21px);margin-top:10px}
+.matrix th,.matrix td{padding:18px 16px;text-align:center;border-bottom:1px solid var(--line);transition:opacity .3s,background .3s}
+.matrix th[scope=row]{text-align:left;font-weight:500;color:var(--muted);width:18%}
+.matrix thead th{font-size:1.05em}
+.matrix small{display:block;font-size:.72em;color:var(--muted)}
+.matrix[data-mode="tui"] .c-gui,.matrix[data-mode="gui"] .c-tui{opacity:.3}
+.matrix[data-mode="tui"] .c-tui{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--ember)}
+.matrix[data-mode="gui"] .c-gui{background:color-mix(in srgb,#5A7A92 16%,transparent)}
+.matrix td{font-weight:700}
+.wrapx{overflow-x:auto}
+
+/* 6 surfaces */
+.surfaces{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+.surf{background:#fff;border:2px solid transparent;border-radius:10px;padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:#241810}
+.surf img{height:170px;width:auto;object-fit:contain}
+.surf[aria-pressed="true"]{border-color:var(--ember);box-shadow:0 12px 30px -16px rgba(232,115,26,.8)}
+.surf-text{margin-top:18px;min-height:3.4em;font-size:clamp(15px,1.5vw,19px);max-width:44em}
+.quote{border-radius:10px;padding:16px 20px;background:color-mix(in srgb,var(--amber) 16%,transparent);font-size:15px;max-width:26em}
+
+/* 7 metadesk */
+.hot-wrap{position:relative;background:#fff;border-radius:10px}
+.hot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:2px solid #fff;background:var(--ember);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 0 0 6px rgba(232,115,26,.3)}
+.hot[aria-pressed="true"]{background:var(--espresso);box-shadow:0 0 0 8px rgba(232,115,26,.55)}
+.hot-list{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:10px}
+.hot-list li{padding:12px 16px;border-radius:8px;border:1px solid var(--line);cursor:pointer;transition:background .2s}
+.hot-list li.cur{background:color-mix(in srgb,var(--amber) 18%,transparent);border-color:var(--amber)}
+.hot-list b{color:var(--ember)}
+
+/* 8 attention */
+.att{position:relative;width:min(100%,500px);aspect-ratio:1;margin:0 auto}
+.att svg{position:absolute;inset:0;width:100%;height:100%}
+.chip{position:absolute;transform:translate(-50%,-50%);border:1.5px solid var(--amber);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer;white-space:nowrap;transition:left .6s cubic-bezier(.6,.1,.2,1),top .6s cubic-bezier(.6,.1,.2,1),background .3s}
+.chip.center{background:var(--ember);color:#fff;border-color:var(--ember);font-weight:700;font-size:16px;padding:10px 18px}
+.att-note{text-align:center;font-size:15px;color:var(--muted);margin-top:8px;min-height:3em}
+
+/* 9 ambientROOM */
+#s9{padding-top:0;padding-bottom:0;flex-direction:column;justify-content:flex-end}
+.water{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
+.water canvas{position:absolute;inset:0;width:100%;height:100%}
+.water::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(20,11,6,.1) 0%,rgba(20,11,6,.35) 30%,rgba(20,11,6,.92) 58%,#140B06 100%);pointer-events:none}
+.water canvas{z-index:1}
+#s9 .inner{position:relative;padding:40px 0 clamp(28px,5vw,60px)}
+#s9 h2{color:var(--amber)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:22px;padding:16px 20px;background:rgba(255,255,255,.07);border-radius:10px;max-width:760px}
+.ctrl label{font-size:15px}
+.ctrl input[type=range]{width:220px;accent-color:var(--ember)}
+.ctrl output{font-variant-numeric:tabular-nums;font-weight:700;color:var(--glow);min-width:3.5em;display:inline-block}
+#s9 .pts li{border-color:var(--ember)}
+
+/* 10 transboard */
+.tb-stage{position:relative;height:min(58vh,480px);touch-action:none}
+.board{position:absolute;left:0;top:0;width:78%;height:82%;background:#FDFDFB;border:10px solid #D6D9DD;border-radius:8px;box-shadow:0 16px 40px -20px rgba(0,0,0,.5)}
+.board::after{content:"";position:absolute;left:30%;right:30%;bottom:-20px;height:8px;background:#C3C7CC;border-radius:3px}
+.board canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;transform-origin:50% 50%}
+.board .ph{position:absolute;inset:0;display:grid;place-items:center;color:#A9A39D;font-size:15px;pointer-events:none}
+.card{position:absolute;right:0;bottom:0;width:170px;height:108px;background:#FFF8EC;border-radius:8px;box-shadow:0 12px 26px -10px rgba(0,0,0,.45);padding:12px 14px;cursor:grab;touch-action:none;user-select:none;color:#241810;display:flex;flex-direction:column;justify-content:space-between;z-index:3;transition:box-shadow .2s}
+.card.drag{cursor:grabbing;box-shadow:0 22px 40px -12px rgba(232,115,26,.8)}
+.card.full{background:linear-gradient(135deg,#FFE3BD,#FFC27A)}
+.card .bc{height:26px;background:repeating-linear-gradient(90deg,#241810 0 2px,transparent 2px 4px,#241810 4px 5px,transparent 5px 8px,#241810 8px 11px,transparent 11px 12px)}
+.card small{font-size:12px}
+.tb-tools{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+
+/* 11 optical */
+#s11{justify-content:center;text-align:center;background:radial-gradient(90% 90% at 50% 50%,#E57722,#8E3A0A)}
+#s11 h2{font-family:var(--serif);font-size:clamp(40px,7vw,96px);color:#fff}
+#s11 .lede{color:#FFF1E0;margin:22px auto 0;font-size:clamp(18px,2vw,26px)}
+.prism{width:min(80vw,520px);margin:0 auto 10px;display:block}
+
+/* 12 shadows */
+.sh-wrap{background:linear-gradient(#5A3419,#3B2110);border-radius:12px;overflow:hidden}
+.sh-wrap svg{width:100%;height:auto;display:block;touch-action:none}
+.light{cursor:grab}
+
+/* 13 conclusion */
+#s13{background:#120A05;color:#fff;text-align:center;justify-content:center}
+.beads{position:absolute;inset:0;pointer-events:none}
+.beads i{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#A8703F,#5A3419 55%,#2B160A);box-shadow:0 10px 30px rgba(0,0,0,.6)}
+#s13 blockquote{margin:0 auto;font-family:var(--serif);font-weight:900;font-size:clamp(28px,4.6vw,62px);line-height:1.35;max-width:18em;position:relative}
+#s13 blockquote em{font-style:normal;color:var(--amber)}
+#s13 p{position:relative;font-size:clamp(16px,1.7vw,21px);color:#F1DDC8;max-width:36em;margin:30px auto 0}
+
+@media (max-width:860px){
+  .deck{scroll-snap-type:y proximity}
+  .split,#s4 .split{grid-template-columns:1fr}
+  .surf img{height:110px}
+  .surfaces{gap:10px}
+  .nav{display:none}
+  .board{width:100%;height:70%}
+  .card{bottom:0;right:10px}
+  .tb-stage{height:440px}
+}
+@media (prefers-reduced-motion:reduce){
+  .deck{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="投影片導覽"></nav>
+<div class="count" aria-live="polite"><span id="cur">1</span> / <span id="tot">13</span></div>
+
+<main class="deck" id="deck">
+
+<section class="slide" id="s1" data-title="Tangible Bits">
+  <div class="field" id="field" aria-hidden="true"></div>
+  <div class="inner hero-copy">
+    <h1>Tangible Bits</h1>
+    <p class="sub">打破螢幕牆，讓數位訊息摸得到、看得見</p>
+    <p class="by">由麻省理工學院 Hiroshi Ishii 教授提出的 TUI 願景：科技的終極目標並非製造更多螢幕，而是將數位資訊 (Bits) 與物理實體 (Atoms) 無縫融合。</p>
+    <p class="go">按 ↓ 或往下滑開始　·　移動游標，看位元變成原子</p>
+  </div>
+</section>
+
+<section class="slide" id="s2" data-title="問題">
+  <div class="inner split">
+    <div class="photo" style="aspect-ratio:1"><img src="assets/images/screens.jpg" alt="一排排人坐在發光螢幕前"></div>
+    <div>
+      <p class="tag">HCI Classic / Problem</p>
+      <h2>被困在「矩形螢幕」裡的雙重國籍者</h2>
+      <ul class="pts">
+        <li><b>雙重世界的斷層</b>我們同時活在實體環境與網路空間，但兩個平行世界卻缺乏無縫橋樑。</li>
+        <li><b>光束的洩漏</b>無限的數位資訊 (Bits) 只能透過無數個矩形螢幕，以光束的形式洩漏到物理世界。</li>
+        <li><b>發光的塑膠盒</b>我們把神奇的數位魔法，全關在桌面上一個個死板的 GUI 介面裡。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s3" data-title="靈感">
+  <div class="inner split">
+    <div>
+      <p class="tag">HCI Classic / Inspiration</p>
+      <h2>從博物館與算盤找回失落的觸覺</h2>
+      <ul class="pts">
+        <li><b>歷史的觸覺記憶</b>在電腦發明前，人類是透過「觸摸」精美的科學儀器來理解世界與處理資訊。</li>
+        <li><b>豐富的環境賦能</b>古代的星盤與算盤不僅是計算工具，更擁有多重感官體驗的重量與材質紋理。</li>
+        <li><b>失落的文化</b>隨著個人電腦的普及，我們漸漸失去了與實體物件進行「觸覺互動」的本能。</li>
+      </ul>
+    </div>
+    <div class="ab-col">
+      <div class="photo" style="aspect-ratio:16/10"><img src="assets/images/abacus.jpg" alt="木桌上的算盤與黃銅星盤"></div>
+      <div class="abacus" role="group" aria-label="可操作的算盤">
+        <div class="rods" id="rods"></div>
+        <div class="abacus-read"><span>撥一下算珠：珠子的位置就是數字</span><strong id="abv">0</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide orange" id="s4" data-title="TUI 誕生">
+  <div class="inner split">
+    <div>
+      <p class="tag">HCI Classic / The Vision</p>
+      <h2>TUI 誕生：<br>打破螢幕，<br>讓世界成為介面</h2>
+      <p class="lede">不再把電腦塞進背景，而是喚醒周遭的實體物件、儀器與空間，消弭實體與虛擬的界線。</p>
+    </div>
+    <div class="photo" style="aspect-ratio:.95"><img src="assets/images/vision.jpg" alt="滑鼠衝破螢幕，光芒流向咖啡杯、筆記本與儀器"></div>
+  </div>
+</section>
+
+<section class="slide" id="s5" data-title="GUI vs. TUI">
+  <div class="inner">
+    <p class="tag">HCI Classic / Matrix</p>
+    <h2>介面典範轉移：<span class="en">GUI vs. TUI</span></h2>
+    <div class="mode" role="group" aria-label="比較焦點">
+      <button class="btn" data-m="gui" aria-pressed="false">看 GUI</button>
+      <button class="btn" data-m="tui" aria-pressed="true">看 TUI</button>
+    </div>
+    <div class="wrapx">
+    <table class="matrix" id="matrix" data-mode="tui">
+      <thead><tr><th></th><th class="c-gui">傳統圖形介面 (GUI)</th><th class="c-tui">實體使用者介面 (TUI)</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">介面媒介</th><td class="c-gui">螢幕上的像素<small>Painted Bits</small></td><td class="c-tui">日常實體物件與空間<small>Tangible Bits</small></td></tr>
+        <tr><th scope="row">注意力分佈</th><td class="c-gui">強迫集中於前景<small>Foreground only</small></td><td class="c-tui">融合前景操作與背景感知<small>Center &amp; Periphery</small></td></tr>
+        <tr><th scope="row">物理型態</th><td class="c-gui">扁平、受限於矩形<small>Flat / Rectangular</small></td><td class="c-tui">具備材質、重量與空間感<small>Tactile / Spatial</small></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s6" data-title="互動表面">
+  <div class="inner">
+    <p class="tag">HCI Classic / Concept 1</p>
+    <div class="split" style="align-items:start">
+      <div>
+        <h2>核心概念一：互動表面 <span class="en">(Interactive Surfaces)</span></h2>
+        <p class="lede">讓牆壁與桌面變成傳送門。不再需要刻意「打開電腦」，因為你所在的房間就是一台巨大的電腦。</p>
+      </div>
+      <p class="quote">生活比喻：就像《哈利波特》裡的魔法地圖，看似普通的羊皮紙（實體表面），卻能即時顯現動態資訊。</p>
+    </div>
+    <div class="surfaces" role="group" aria-label="選擇一個表面">
+      <button class="surf" data-i="0" aria-pressed="true"><img src="assets/images/table.jpg" alt="">桌面</button>
+      <button class="surf" data-i="1" aria-pressed="false"><img src="assets/images/door.jpg" alt="">門窗</button>
+      <button class="surf" data-i="2" aria-pressed="false"><img src="assets/images/wall.jpg" alt="">牆壁</button>
+    </div>
+    <p class="surf-text" id="surfText" aria-live="polite"></p>
+  </div>
+</section>
+
+<section class="slide" id="s7" data-title="metaDESK">
+  <div class="inner split">
+    <div>
+      <p class="tag">HCI Classic / Prototype 1</p>
+      <h2>metaDESK：麻省理工校園在桌面上立體化</h2>
+      <ul class="hot-list" id="hotList">
+        <li data-i="0"><b>實體化視窗</b>　將傳統 GUI 的視窗與圖示，徹底轉化為真實世界的實體物件。</li>
+        <li data-i="1"><b>實體圖示 (Phicons)</b>　把螢幕裡的「數位圖示」，變成可以直接用手抓起來的實體把手。放置大圓頂模型，桌面立即浮現 2D 數位地圖。</li>
+        <li data-i="2"><b>主動透鏡 (activeLENS)</b>　透過手臂支架上的透鏡，能像放大鏡般直接看見 3D 的校園建築空間。</li>
+      </ul>
+      <p class="hint">點圖上的圓點或左側項目，對照 metaDESK 的各個部件。</p>
+    </div>
+    <div class="hot-wrap">
+      <img src="assets/images/metadesk.jpg" alt="metaDESK 示意圖：Phicon、activeLENS 與 2D 數位地圖">
+      <button class="hot" style="left:52%;top:72%" data-i="0" aria-label="2D 數位地圖">1</button>
+      <button class="hot" style="left:24%;top:44%" data-i="1" aria-label="Phicon 實體圖示">2</button>
+      <button class="hot" style="left:60%;top:28%" data-i="2" aria-label="activeLENS 主動透鏡">3</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s8" data-title="背景環境媒體">
+  <div class="inner split">
+    <div>
+      <p class="tag">HCI Classic / Concept 2</p>
+      <h2>核心概念二：背景環境媒體 <span class="en">(Ambient Media)</span></h2>
+      <p class="lede" style="color:var(--ink);font-weight:700">資訊不一定要用看的，可以是用感受的。</p>
+      <ul class="pts">
+        <li><b>潛意識感知</b>利用光線、聲音、氣流、水波，在人類感知的「邊緣」傳遞數位資訊。</li>
+        <li><b>平行處理器</b>人類大腦能平滑地在「前景專注」與「背景感知」間切換焦點。</li>
+        <li><b>生活比喻</b>就像你在客廳看電視，不用走進廚房，只要「聞到咖啡香」就知道早餐做好了。</li>
+      </ul>
+    </div>
+    <div>
+      <div class="att" id="att">
+        <svg viewBox="0 0 500 500" aria-hidden="true">
+          <defs><radialGradient id="rg"><stop offset="0" stop-color="#E8731A" stop-opacity=".22"/><stop offset="1" stop-color="#E8731A" stop-opacity="0"/></radialGradient></defs>
+          <circle cx="250" cy="250" r="245" fill="url(#rg)"/>
+          <circle cx="250" cy="250" r="240" fill="none" stroke="#F7A948" stroke-opacity=".35"/>
+          <circle cx="250" cy="250" r="185" fill="none" stroke="#F7A948" stroke-opacity=".5"/>
+          <circle cx="250" cy="250" r="130" fill="none" stroke="#F7A948" stroke-opacity=".7"/>
+          <circle cx="250" cy="250" r="72" fill="#E8731A" fill-opacity=".12" stroke="#E8731A"/>
+        </svg>
+      </div>
+      <p class="att-note" id="attNote"></p>
+    </div>
+  </div>
+</section>
+
+<section class="slide dark" id="s9" data-title="ambientROOM">
+  <div class="water" style="background-image:url('assets/images/water.jpg')"><canvas id="rain"></canvas></div>
+  <div class="inner">
+    <p class="tag">HCI Classic / Prototype 2</p>
+    <h2>ambientROOM：聽見雨聲，就知道今天的網站流量</h2>
+    <ul class="pts" style="max-width:none">
+      <li><b>邊緣感知的空間</b>一個專注於人類潛意識感知的實驗房間。</li>
+      <li><b>流量轉化為雨聲</b>將實體玩具車（Phicon）靠近喇叭，房間便會播放雨聲。雨聲的磅礡程度，代表該產品網頁的「點擊率」。</li>
+      <li><b>水波紋光影</b>若不想聽見聲音，網路上的每一次點擊也會牽動房間內水箱的機關，在天花板投射出充滿詩意的漣漪。</li>
+    </ul>
+    <div class="ctrl">
+      <label for="traffic">網頁點擊率 <output id="tv">40%</output></label>
+      <input type="range" id="traffic" min="0" max="100" value="40">
+      <button class="btn" id="clickBtn">送出一次點擊</button>
+      <button class="btn" id="soundBtn" aria-pressed="false">播放雨聲</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s10" data-title="位元與原子的結合">
+  <div class="inner split" style="grid-template-columns:1.15fr .85fr">
+    <div>
+      <div class="tb-stage" id="tbStage">
+        <div class="board" id="board"><canvas id="ink"></canvas><div class="ph" id="ph">在這塊白板上畫幾筆</div></div>
+        <div class="card" id="card" tabindex="0" role="button" aria-label="hyperCARD，拖到白板上">
+          <strong>hyperCARD</strong><div class="bc"></div><small id="cardInfo">空白卡片</small>
+        </div>
+      </div>
+      <div class="tb-tools">
+        <button class="btn" id="absorbBtn">把卡片靠近白板</button>
+        <button class="btn" id="clearBtn">擦掉白板</button>
+      </div>
+    </div>
+    <div>
+      <p class="tag">HCI Classic / Concept 3</p>
+      <h2>核心概念三：位元與原子的結合</h2>
+      <p class="lede">讓實體物件自帶數位記憶 (Coupling Bits &amp; Atoms)。</p>
+      <ul class="pts">
+        <li><b>transBOARD 系統</b>外表是一般的白板，但能將畫布上的所有筆跡同步儲存到雲端。</li>
+        <li><b>超連結紙卡 (hyperCARDs)</b>帶有條碼的普通紙卡，能作為數位筆記的物理容器。</li>
+        <li><b>生活比喻</b>就像「悠遊卡」，實體卡片本身沒裝錢，但只要將卡片靠近白板，就能把會議筆記「吸進去」帶走。</li>
+      </ul>
+      <p class="hint">畫完後把卡片拖到白板上，筆跡會被吸進卡片；擦掉白板後再靠近一次，筆跡就回來了。</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s11" data-title="光學隱喻">
+  <div class="inner">
+    <svg class="prism" viewBox="0 0 520 200" aria-hidden="true" id="prism">
+      <defs><linearGradient id="pg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs>
+      <line x1="0" y1="120" x2="228" y2="112" stroke="#fff" stroke-width="3" id="beam"/>
+      <g id="spectrum"></g>
+      <polygon points="260,20 330,170 190,170" fill="url(#pg)" stroke="#fff" stroke-opacity=".7"/>
+    </svg>
+    <p class="tag" style="color:rgba(255,255,255,.7)">HCI Classic / The Secret Sauce</p>
+    <h2>貫穿一切的光學隱喻<br>(Optical Metaphors)</h2>
+    <p class="lede">為什麼 TUI 這麼直覺好學？<br>因為它完全遵循人類與生俱來的光學與物理法則。</p>
+  </div>
+</section>
+
+<section class="slide" id="s12" data-title="數位影子">
+  <div class="inner split" style="grid-template-columns:.8fr 1.2fr">
+    <div>
+      <p class="tag">HCI Classic / Deep Dive</p>
+      <h2><span class="en">數位影子 (Digital Shadows)</span>：看不見的數據，用光照出來</h2>
+      <p class="lede">實體物件投射出物理的黑影，數位物件則投射出數據的影子。我們無須看說明書，大腦秒懂。</p>
+      <p class="hint">拖曳數位手電筒繞著建築模型移動：影子會跟著光的方向改變，光越近，數據影子拉得越長。</p>
+    </div>
+    <div class="sh-wrap">
+      <svg id="shadow" viewBox="0 0 800 520" role="img" aria-label="數位手電筒照射建築模型，投射出發光的數據長條圖影子">
+        <defs>
+          <filter id="blur"><feGaussianBlur stdDeviation="10"/></filter>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <radialGradient id="lg"><stop offset="0" stop-color="#FFE3B0" stop-opacity=".55"/><stop offset="1" stop-color="#FFE3B0" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g stroke="#6B4225" stroke-opacity=".5">
+          <path d="M0 80 C200 70 600 95 800 85"/><path d="M0 200 C250 190 550 215 800 205"/><path d="M0 330 C200 320 600 345 800 335"/><path d="M0 450 C250 440 550 465 800 455"/>
+        </g>
+        <polygon id="cone" fill="url(#lg)"/>
+        <g id="shGroup"></g>
+        <g transform="translate(400 280)">
+          <rect x="-44" y="-44" width="88" height="88" rx="4" fill="#E9DCC8" stroke="#8C6A48" stroke-width="2"/>
+          <rect x="-30" y="-30" width="60" height="60" fill="#D1BFA4" stroke="#8C6A48"/>
+          <path d="M-30 -10H30M-30 10H30M-10 -30V30M10 -30V30" stroke="#8C6A48" stroke-opacity=".6"/>
+          <text y="70" text-anchor="middle" fill="#F3E4D0" font-size="16">實體建築模型</text>
+        </g>
+        <g id="light" class="light" tabindex="0" role="slider" aria-label="數位手電筒位置，可用方向鍵移動">
+          <circle r="34" fill="#FFE9C4" fill-opacity=".18"/>
+          <circle r="22" fill="#C9CDD2" stroke="#fff" stroke-width="2"/>
+          <circle r="11" fill="#FFF3D6"/>
+          <text y="52" text-anchor="middle" fill="#FFE9C4" font-size="15">數位手電筒</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s13" data-title="結論">
+  <div class="beads" id="beads" aria-hidden="true"></div>
+  <div class="inner">
+    <p class="tag" style="position:relative;color:rgba(255,255,255,.6)">HCI Classic / Conclusion</p>
+    <blockquote>最完美的科技，是退居生活背景，讓我們重新用<em>全身感官</em>去體驗世界。</blockquote>
+    <p>Tangible Bits 將「畫布上的像素」解放為「可觸摸的位元」。打破螢幕牆，我們不再是受困於發光矩形的囚徒，而是虛實融合世界的主人。</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+(()=>{
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const deck = document.getElementById('deck');
+const slides=[...document.querySelectorAll('.slide')];
+const nav=document.querySelector('.nav');
+document.getElementById('tot').textContent=slides.length;
+slides.forEach((s,i)=>{const a=document.createElement('a');a.href='#'+s.id;a.innerHTML='<span>'+(i+1)+'. '+s.dataset.title+'</span>';a.setAttribute('aria-label',s.dataset.title);a.onclick=e=>{e.preventDefault();go(i)};nav.appendChild(a)});
+let cur=0;
+function setCur(i){cur=i;document.getElementById('cur').textContent=i+1;nav.querySelectorAll('a').forEach((a,j)=>a.classList.toggle('cur',j===i))}
+function go(i){i=Math.max(0,Math.min(slides.length-1,i));slides[i].scrollIntoView({behavior:reduce?'auto':'smooth'})}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setCur(slides.indexOf(e.target))}),{root:deck,threshold:.55});
+slides.forEach(s=>io.observe(s));setCur(0);
+addEventListener('keydown',e=>{
+  const t=e.target;if(t.matches('input,textarea')||t.getAttribute('role')==='slider')return;
+  if(['ArrowDown','PageDown','ArrowRight',' '].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowUp','PageUp','ArrowLeft'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home'){e.preventDefault();go(0)}else if(e.key==='End'){e.preventDefault();go(slides.length-1)}
+});
+
+/* 1 hero field: bits (squares) → atoms (wood beads) */
+const field=document.getElementById('field');
+const cols=innerWidth<700?9:16, rows=innerWidth<700?11:8;
+field.style.setProperty('--cols',cols);
+const cells=[];
+for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const t=c/(cols-1), i=document.createElement('i');
+  i.style.borderRadius=(t*50)+'%';
+  const a=.14+.1*Math.sin(r*1.7+c);
+  i.style.background=t<.5?`rgba(255,244,230,${a+.1})`:`radial-gradient(circle at 35% 30%,rgba(190,130,80,${.35+t*.5}),rgba(80,40,14,${.3+t*.5}))`;
+  i.style.border=t<.5?'1px solid rgba(255,255,255,.35)':'0';
+  i.style.transform='scale(.55)';
+  if(!reduce){i.style.opacity=0;i.style.transition='opacity .6s ease '+(c*60+r*20)+'ms, transform .35s ease';requestAnimationFrame(()=>requestAnimationFrame(()=>i.style.opacity=1))}
+  field.appendChild(i);cells.push(i);
+}
+document.getElementById('s1').addEventListener('pointermove',e=>{
+  cells.forEach(i=>{const b=i.getBoundingClientRect();const d=Math.hypot(b.left+b.width/2-e.clientX,b.top+b.height/2-e.clientY);const s=.55+Math.max(0,1-d/220)*.6;i.style.transform=`scale(${s})`})
+});
+
+/* 3 abacus */
+const rodsEl=document.getElementById('rods');const RODS=5;const st=Array.from({length:RODS},()=>({u:0,l:0}));
+function drawAbacus(){
+  rodsEl.innerHTML='';
+  st.forEach((s,ri)=>{
+    const rod=document.createElement('div');rod.className='rod';
+    const up=document.createElement('div');up.className='up';
+    const ub=document.createElement('button');ub.className='bead'+(s.u?' on':'');ub.setAttribute('aria-label',`第 ${ri+1} 檔上珠（5）`);ub.setAttribute('aria-pressed',!!s.u);
+    ub.onclick=()=>{s.u^=1;drawAbacus()};
+    const sp=document.createElement('div');sp.className='spacer';
+    if(s.u){up.append(sp,ub)}else{up.append(ub,sp)}
+    const bar=document.createElement('div');bar.className='bar';
+    const low=document.createElement('div');low.className='low';
+    const mk=k=>{const b=document.createElement('button');b.className='bead'+(k<s.l?' on':'');b.setAttribute('aria-label',`第 ${ri+1} 檔下珠 ${k+1}`);b.onclick=()=>{s.l=(k<s.l)?k:k+1;drawAbacus()};return b};
+    for(let k=0;k<s.l;k++)low.appendChild(mk(k));
+    const sp2=document.createElement('div');sp2.className='spacer';low.appendChild(sp2);
+    for(let k=s.l;k<4;k++)low.appendChild(mk(k));
+    rod.append(up,bar,low);rodsEl.appendChild(rod);
+  });
+  const v=st.reduce((a,s,i)=>a+(s.u*5+s.l)*10**(RODS-1-i),0);
+  document.getElementById('abv').textContent=v.toLocaleString('zh-TW');
+}
+drawAbacus();
+
+/* 5 matrix */
+const mx=document.getElementById('matrix');
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mx.dataset.mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+
+/* 6 surfaces */
+const surfT=['桌面：攤在桌上的地圖本身就是顯示器，手一放上去就能查看、移動資料，不必另外打開電腦。','門窗：玻璃窗隨外頭的天氣浮現陽光、雲朵與風，出門前瞄一眼就知道要不要帶傘。','牆壁：整面牆成為可以揮灑的畫布，筆觸留在實體牆面上，同時也成為可保存的數位資訊。'];
+const surfs=document.querySelectorAll('.surf');const surfText=document.getElementById('surfText');
+function pickSurf(i){surfs.forEach((s,j)=>s.setAttribute('aria-pressed',i===j));surfText.textContent=surfT[i]}
+surfs.forEach(s=>s.onclick=()=>pickSurf(+s.dataset.i));pickSurf(0);
+
+/* 7 metaDESK */
+const hots=document.querySelectorAll('.hot'),hl=document.querySelectorAll('#hotList li');
+function pickHot(i){hots.forEach(h=>h.setAttribute('aria-pressed',+h.dataset.i===i));hl.forEach(l=>l.classList.toggle('cur',+l.dataset.i===i))}
+hots.forEach(h=>h.onclick=()=>pickHot(+h.dataset.i));hl.forEach(l=>l.onclick=()=>pickHot(+l.dataset.i));pickHot(1);
+
+/* 8 attention rings */
+const att=document.getElementById('att'),attNote=document.getElementById('attNote');
+const items=['手上的報告','咖啡香','窗外雨聲','同事的腳步聲','天花板的光影','電視新聞'];
+let order=[...items];
+const chips=items.map(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{const i=order.indexOf(t);[order[0],order[i]]=[order[i],order[0]];layoutAtt()};att.appendChild(b);return b});
+function layoutAtt(){
+  order.forEach((t,k)=>{const c=chips[items.indexOf(t)];
+    if(k===0){c.style.left='50%';c.style.top='50%';c.classList.add('center')}
+    else{const a=-Math.PI/2+(k-1)*2*Math.PI/(order.length-1)+.3;const r=k%2?37:28;c.style.left=(50+r*Math.cos(a))+'%';c.style.top=(50+r*Math.sin(a))+'%';c.classList.remove('center')}
+  });
+  attNote.textContent=`前景：「${order[0]}」。其餘 ${order.length-1} 項退到邊緣，仍在潛意識中被感知。點任何一項，把它拉進焦點。`;
+}
+layoutAtt();
+
+/* 9 ambientROOM rain + ripples + sound */
+const cv=document.getElementById('rain'),ctx=cv.getContext('2d');let rate=40,drops=[],ripples=[];
+const tr=document.getElementById('traffic'),tv=document.getElementById('tv');
+function sizeRain(){const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0)}
+sizeRain();addEventListener('resize',sizeRain);
+tr.oninput=()=>{rate=+tr.value;tv.textContent=rate+'%';if(gain)gain.gain.setTargetAtTime(rate/100*.35,ac.currentTime,.2)};
+function ripple(x,y){const r=cv.getBoundingClientRect();ripples.push({x:x??Math.random()*r.width,y:y??Math.random()*r.height*.8,r:2,a:.9})}
+document.getElementById('clickBtn').onclick=()=>ripple();
+cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();ripple(e.clientX-r.left,e.clientY-r.top)});
+let rainOn=false;
+function rainLoop(){
+  if(!rainOn){requestAnimationFrame(rainLoop);return}
+  const r=cv.getBoundingClientRect(),W=r.width,H=r.height;
+  ctx.clearRect(0,0,W,H);
+  const want=Math.round(rate*2.4);
+  while(drops.length<want)drops.push({x:Math.random()*W,y:Math.random()*-H,v:6+Math.random()*6,l:8+Math.random()*14});
+  if(drops.length>want)drops.length=want;
+  ctx.strokeStyle='rgba(190,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();
+  drops.forEach(d=>{d.y+=d.v;d.x+=d.v*.12;if(d.y>H){d.y=-20;d.x=Math.random()*W}ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-d.l*.12,d.y-d.l)});ctx.stroke();
+  if(Math.random()<rate/100*.08)ripple();
+  ripples=ripples.filter(p=>p.a>.02);
+  ripples.forEach(p=>{p.r+=1.6;p.a*=.975;ctx.strokeStyle=`rgba(170,230,255,${p.a})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,p.r,p.r*.45,0,0,7);ctx.stroke();ctx.beginPath();ctx.ellipse(p.x,p.y,p.r*.6,p.r*.27,0,0,7);ctx.stroke()});
+  requestAnimationFrame(rainLoop);
+}
+new IntersectionObserver(es=>es.forEach(e=>{rainOn=e.isIntersecting;if(!rainOn&&ac&&ac.state==='running'&&soundOn)ac.suspend();else if(rainOn&&ac&&soundOn)ac.resume()}),{root:deck,threshold:.2}).observe(document.getElementById('s9'));
+requestAnimationFrame(rainLoop);
+let ac=null,gain=null,soundOn=false;const sb=document.getElementById('soundBtn');
+sb.onclick=()=>{
+  try{
+    if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();const len=ac.sampleRate*2,buf=ac.createBuffer(1,len,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+      const src=ac.createBufferSource();src.buffer=buf;src.loop=true;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=1400;f.Q.value=.6;gain=ac.createGain();gain.gain.value=0;src.connect(f).connect(gain).connect(ac.destination);src.start()}
+    soundOn=!soundOn;sb.setAttribute('aria-pressed',soundOn);sb.textContent=soundOn?'關閉雨聲':'播放雨聲';
+    if(soundOn){ac.resume();gain.gain.setTargetAtTime(rate/100*.35,ac.currentTime,.2)}else gain.gain.setTargetAtTime(0,ac.currentTime,.15);
+  }catch(err){sb.textContent='此瀏覽器無法播放聲音';sb.disabled=true}
+};
+
+/* 10 transBOARD */
+const ink=document.getElementById('ink'),ictx=ink.getContext('2d'),board=document.getElementById('board'),card=document.getElementById('card'),stage=document.getElementById('tbStage'),ph=document.getElementById('ph'),cardInfo=document.getElementById('cardInfo');
+let strokes=[],stored=[],drawing=null;
+function sizeInk(){const r=ink.getBoundingClientRect(),d=devicePixelRatio||1;ink.width=r.width*d;ink.height=r.height*d;ictx.setTransform(d,0,0,d,0,0);redraw()}
+function redraw(){const r=ink.getBoundingClientRect();ictx.clearRect(0,0,r.width,r.height);ictx.lineCap=ictx.lineJoin='round';
+  strokes.forEach(s=>{ictx.strokeStyle=s.c;ictx.lineWidth=3;ictx.beginPath();s.p.forEach(([x,y],k)=>k?ictx.lineTo(x*r.width,y*r.height):ictx.moveTo(x*r.width,y*r.height));ictx.stroke()});
+  ph.style.display=strokes.length?'none':'grid'}
+const pens=['#1F2A44','#C0391B','#1F6F4A'];
+ink.addEventListener('pointerdown',e=>{ink.setPointerCapture(e.pointerId);const r=ink.getBoundingClientRect();drawing={c:pens[strokes.length%3],p:[[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]]};strokes.push(drawing)});
+ink.addEventListener('pointermove',e=>{if(!drawing)return;const r=ink.getBoundingClientRect();drawing.p.push([(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]);redraw()});
+ink.addEventListener('pointerup',()=>drawing=null);ink.addEventListener('pointercancel',()=>drawing=null);
+sizeInk();addEventListener('resize',sizeInk);
+function setCard(){card.classList.toggle('full',stored.length>0);cardInfo.textContent=stored.length?`已儲存 ${stored.length} 筆筆跡`:'空白卡片'}
+function touchBoard(){
+  if(strokes.length){
+    const cr=card.getBoundingClientRect(),br=ink.getBoundingClientRect();
+    ink.style.transformOrigin=`${cr.left+cr.width/2-br.left}px ${cr.top+cr.height/2-br.top}px`;
+    ink.style.transition=reduce?'none':'transform .6s cubic-bezier(.6,0,.4,1), opacity .6s';ink.style.transform='scale(.04)';ink.style.opacity=0;
+    setTimeout(()=>{stored=stored.concat(strokes);strokes=[];ink.style.transition='none';ink.style.transform='';ink.style.opacity=1;redraw();setCard()},reduce?0:620);
+  }else if(stored.length){
+    strokes=stored;stored=[];ink.style.transition='none';ink.style.opacity=0;redraw();requestAnimationFrame(()=>{ink.style.transition='opacity .5s';ink.style.opacity=1});setCard();
+  }
+}
+let drag=null;
+card.addEventListener('pointerdown',e=>{card.setPointerCapture(e.pointerId);const sr=stage.getBoundingClientRect(),cr=card.getBoundingClientRect();drag={dx:e.clientX-cr.left,dy:e.clientY-cr.top,sr};card.classList.add('drag');card.style.right='auto';card.style.bottom='auto';card.style.left=(cr.left-sr.left)+'px';card.style.top=(cr.top-sr.top)+'px'});
+card.addEventListener('pointermove',e=>{if(!drag)return;const {sr}=drag;const x=Math.max(0,Math.min(sr.width-card.offsetWidth,e.clientX-sr.left-drag.dx)),y=Math.max(0,Math.min(sr.height-card.offsetHeight,e.clientY-sr.top-drag.dy));card.style.left=x+'px';card.style.top=y+'px'});
+function endDrag(){if(!drag)return;drag=null;card.classList.remove('drag');const c=card.getBoundingClientRect(),b=board.getBoundingClientRect();
+  const overlap=Math.max(0,Math.min(c.right,b.right)-Math.max(c.left,b.left))*Math.max(0,Math.min(c.bottom,b.bottom)-Math.max(c.top,b.top));
+  if(overlap>c.width*c.height*.4){touchBoard();setTimeout(resetCard,reduce?0:700)}}
+function resetCard(){card.style.left='';card.style.top='';card.style.right='';card.style.bottom=''}
+card.addEventListener('pointerup',endDrag);card.addEventListener('pointercancel',endDrag);
+card.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();touchBoard()}});
+document.getElementById('absorbBtn').onclick=touchBoard;
+document.getElementById('clearBtn').onclick=()=>{strokes=[];redraw()};
+
+/* 11 prism spectrum */
+const spec=document.getElementById('spectrum');
+['#FF4D4D','#FF9A3C','#FFE14D','#6BE38A','#4DB8FF','#8A6BFF'].forEach((c,i)=>{const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',292);l.setAttribute('y1',100);l.setAttribute('x2',520);l.setAttribute('y2',40+i*22);l.setAttribute('stroke',c);l.setAttribute('stroke-width',4);l.setAttribute('stroke-opacity',.85);spec.appendChild(l)});
+
+/* 12 digital shadows */
+const svg=document.getElementById('shadow'),lightG=document.getElementById('light'),shG=document.getElementById('shGroup'),cone=document.getElementById('cone');
+const C={x:400,y:280};let L={x:150,y:170};
+const data=[{v:.95,c:'#5FD0FF',t:'能耗'},{v:.7,c:'#6BE38A',t:'人流'},{v:.5,c:'#D6F25A',t:'日照'},{v:.82,c:'#FFC24D',t:'溫度'},{v:.38,c:'#FF8A4D',t:'噪音'}];
+function drawShadow(){
+  lightG.setAttribute('transform',`translate(${L.x} ${L.y})`);
+  const dx=C.x-L.x,dy=C.y-L.y,dist=Math.hypot(dx,dy)||1,ang=Math.atan2(dy,dx),deg=ang*180/Math.PI;
+  const len=Math.max(90,Math.min(330,52000/dist));
+  const px=-Math.sin(ang)*60,py=Math.cos(ang)*60;
+  cone.setAttribute('points',`${L.x},${L.y} ${C.x+px*1.3},${C.y+py*1.3} ${C.x-px*1.3},${C.y-py*1.3}`);
+  let h=`<g transform="translate(${C.x} ${C.y}) rotate(${deg})"><rect x="30" y="-58" width="${len+40}" height="116" fill="#000" fill-opacity=".45" filter="url(#blur)"/>`;
+  data.forEach((d,i)=>{const y=-50+i*21,w=d.v*len;const flip=Math.abs(deg)>90;
+    h+=`<rect x="52" y="${y}" width="${w}" height="15" rx="3" fill="${d.c}" fill-opacity=".85" filter="url(#glow)"/>`;
+    h+=`<text x="${58+w}" y="${y+12}" font-size="12" fill="#FFF5E6" ${flip?`transform="rotate(180 ${62+w} ${y+8})" text-anchor="end"`:''}>${d.t}</text>`});
+  shG.innerHTML=h+'</g>';
+  lightG.setAttribute('aria-valuetext',`光源距離模型 ${Math.round(dist)}，數據影子長度 ${Math.round(len)}`);
+}
+function toSvg(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+let ld=false;
+lightG.addEventListener('pointerdown',e=>{ld=true;lightG.setPointerCapture(e.pointerId)});
+lightG.addEventListener('pointermove',e=>{if(!ld)return;const p=toSvg(e);const dx=p.x-C.x,dy=p.y-C.y,d=Math.hypot(dx,dy);const k=d<95?95/d:1;L={x:Math.max(30,Math.min(770,C.x+dx*k)),y:Math.max(30,Math.min(490,C.y+dy*k))};drawShadow()});
+lightG.addEventListener('pointerup',()=>ld=false);lightG.addEventListener('pointercancel',()=>ld=false);
+lightG.addEventListener('keydown',e=>{const s=20,m={ArrowLeft:[-s,0],ArrowRight:[s,0],ArrowUp:[0,-s],ArrowDown:[0,s]}[e.key];if(!m)return;e.preventDefault();const nx=Math.max(30,Math.min(770,L.x+m[0])),ny=Math.max(30,Math.min(490,L.y+m[1]));if(Math.hypot(nx-C.x,ny-C.y)>=95)L={x:nx,y:ny};drawShadow()});
+drawShadow();
+
+/* 13 beads */
+const bd=document.getElementById('beads');
+[[6,12,90],[18,70,60],[82,14,70],[90,62,100],[70,82,50],[30,88,80],[12,40,40],[60,6,44],[46,90,36],[94,38,34]].forEach(([x,y,s])=>{const i=document.createElement('i');i.style.cssText=`left:${x}%;top:${y}%;width:${s}px;height:${s}px;margin:-${s/2}px`;bd.appendChild(i)});
+})();
+</script>
+</body>
+</html>
